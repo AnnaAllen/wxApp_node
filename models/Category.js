@@ -7,7 +7,8 @@ const schema = new mongoose.Schema({
     menuType: { type: String}, // 所属类别
     menuTypeId: { type: String}, // 所属类别id
     menuImage: {type: String}, // 菜品图片
-    describe: { type: String, default: '' } // 菜品描述
+    describe: { type: String, default: '' }, // 菜品描述
+    isHot: {type: Boolean, default: false} // 是否热销
 })
 
 module.exports = mongoose.model('Categroy', schema)

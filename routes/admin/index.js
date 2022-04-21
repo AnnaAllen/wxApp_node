@@ -1,12 +1,15 @@
 module.exports = app => {
 	const express = require('express')
 	const jwt = require('jsonwebtoken') // 安装npm i jsonwebtoken
-// 安装assert 简化代码
-	const router = express.Router() //这里是express的一个子路由
-
+	const cookieParser = require('cookie-parser');
+	
 	const Category = require('../../models/Category')
 	const AdminUser = require('../../models/AdminUser')
 	
+	const router = express.Router() //这里是express的一个子路由
+
+	app.use(cookieParser())
+
 	// 创建菜单
 	router.post('/addCategories', async (req, res, next) => {
 		const token = req.headers.token
@@ -44,25 +47,29 @@ module.exports = app => {
 		res.send(model)
 	})
 
+	
+
 	// 注册
-	router.post('/login', async (req, res) => {
+	router.post('/register', async (req, res) => {
 		const a = await AdminUser.find({userName: req.body.userName})
 		if(a.length>0) {
-			res.send({
-				code: 1,
-				message: '该用户名已存在'
+			res.status(422).send({
+				message: '用户已存在，请直接登录'
 			})
 			return
 		}
 		const model = await AdminUser.create(req.body)
+		// console.log(model)
+		const token = jwt.sign({ id: model._id }, app.get('secret')) // sign()有两个参数，第一个参数是加密的变量，第二个是秘钥
 		res.send({
-			model,
-			code: 0
+			code:0,
+			message: '注册成功',
+			token
 		})
 	})
 
 	// 登录 register
-	router.post('/register', async (req, res) => {
+	router.post('/login', async (req, res) => {
 		// 1.根据用户名找到用户
 		const user = await AdminUser.findOne({userName: req.body.userName})
 		if(!user) {
@@ -80,12 +87,12 @@ module.exports = app => {
 		}
 		// 3.返回token 
 		const token = jwt.sign({ id: user._id }, app.get('secret')) // sign()有两个参数，第一个参数是加密的变量，第二个是秘钥
+		res.cookie('user',user,{maxAge:60000});//设置cookie
 		res.send({
 			code:0,
 			message: '登录成功',
 			token
 		})
-		// console.log(a)
 	})
 	// 获取所有管理员信息
 	router.get('/getAdmin', async (req,res) => {
